@@ -1,0 +1,30 @@
+{{- /*
+
+In IPTABLES mode, the node-local-dns pods "steal" the IP address of the default
+kube-dns service (172.20.0.10) with custom IPtables rules, so this new service
+below serves as the target for the node-local-dns pods to route requests to.
+
+In IPVS mode, the node-local-dns pods need 
+
+..
+
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "node-local-dns.fullname" . }}-upstream
+  namespace: {{ .Values.kubeDnsNamespace }}
+  labels:
+    {{- include "node-local-dns.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  selector:
+    k8s-app: kube-dns

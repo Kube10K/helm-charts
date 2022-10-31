@@ -1,0 +1,8 @@
+apiVersion: v2
+version: 0.0.3
+appVersion: 1.22.8
+description: NodeLocal DNS Cache helm chart
+name: node-local-dns
+sources:
+- https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns/nodelocaldns
+type: application

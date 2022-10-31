@@ -1,0 +1,10 @@
+clusterName: foo
+
+# Only one replica needed for local testing
+replicas: 1
+
+# Remove antiAffinity rule to avoid issues with testing the pod-nanny
+podAntiAffinity: null
+
+# kind uses /etc/ssl/certs/ca-certificates.crt
+caBundle: ca-certificates.crt

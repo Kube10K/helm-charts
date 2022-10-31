@@ -1,0 +1,13 @@
+{{- if .Values.podDisruptionBudget }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ template "cluster-autoscaler.fullname" . }}
+  labels:
+    {{- include "cluster-autoscaler.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "cluster-autoscaler.selectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.podDisruptionBudget | nindent 2 }}
+{{- end }}

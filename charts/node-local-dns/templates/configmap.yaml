@@ -1,0 +1,138 @@
+{{- /*
+
+https://github.com/kubernetes/kubernetes/blob/master/cluster/addons/dns/nodelocaldns/nodelocaldns.yaml
+
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "node-local-dns.fullname" . }}
+  namespace: {{ .Values.kubeDnsNamespace }}
+  labels:
+    {{- include "node-local-dns.labels" . | nindent 4 }}
+data:
+  {{- /*
+  When we operate in IPVS mode, the node-local-dns pods listen on
+  169.254.20.11 ($ServiceIP) for DNS requests. They forward them
+  to the in-cluster default DNS address 172.20.0.10 ($CoreDnsIP).
+  Kubelet on newly booted hosts is set up then to configure Pods
+  to use 169.254.20.11 ($ServiceIP) as the DNS endpoint.
+ 
+  Pod DNS Request -> 169.254.20.11 (node-local-dns-xxxx daemonset)
+  node-local-dns-xxxx -> TCP -> 172.20.0.10 (core-dns service in kube-system namespace)
+  */}}
+  Corefile.ipvs: |-
+    cluster.local:53 {
+      errors
+      cache  {
+        denial 9984  5
+        success 9984  30
+      } 
+      reload
+      loop
+      bind {{ .Values.serviceIP }}
+      forward . {{ .Values.coreDnsIP }} {
+        force_tcp
+      }
+      prometheus :9253
+      health {{ .Values.serviceIP }}:9252
+    } 
+    in-addr.arpa:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }}
+      forward . {{ .Values.coreDnsIP }} {
+        force_tcp
+      }
+      prometheus :9253
+    } 
+    ip6.arpa:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }}
+      forward . {{ .Values.coreDnsIP }} {
+        force_tcp
+      }
+      prometheus :9253
+    }
+    .:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }}
+      forward . __PILLAR__UPSTREAM__SERVERS__ {
+      }
+      prometheus :9253
+    }
+
+  {{- /*
+  When operating in IPTABLES mode, the node-local-dns cache uses
+  local host iptables to intercept requests for the 172.20.0.10
+  ($CoreDnsIp). It then makes outbound requests to the
+  "kube-dns-upstream" service which points to the core-dns pods,
+  but uses a separate IP address that is not intercepted by
+  iptables.
+
+  Pod DNS Request -> 172.20.0.10 (intercepted by iptables)
+  172.20.0.10 -> UDP -> node-local-dns-xxxx daemonset pod
+  node-local-dns-xxxx -> TCP -> 172.xx.xx.xx kube-dns-upstream service
+  */}}
+  Corefile.iptables: |-
+    cluster.local:53 {
+      errors
+      cache  {
+        denial 9984  5
+        success 9984  30
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }} {{ .Values.coreDnsIP }}
+      forward . __PILLAR__CLUSTER__DNS__ {
+        force_tcp
+      }
+      prometheus :9253
+      health {{ .Values.serviceIP }}:9252
+    }
+    in-addr.arpa:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }} {{ .Values.coreDnsIP }}
+      forward . __PILLAR__CLUSTER__DNS__ {
+        force_tcp
+      }
+      prometheus :9253
+    }
+    ip6.arpa:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }} {{ .Values.coreDnsIP }}
+      forward . __PILLAR__CLUSTER__DNS__ {
+        force_tcp
+      }
+      prometheus :9253
+    }
+    .:53 {
+      errors
+      cache 30 {
+      }
+      reload
+      loop
+      bind {{ .Values.serviceIP }} {{ .Values.coreDnsIP }}
+      forward . __PILLAR__UPSTREAM__SERVERS__ {
+      }
+      prometheus :9253
+    }

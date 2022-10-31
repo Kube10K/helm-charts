@@ -1,6 +1,0 @@
-apiVersion: v2
-appVersion: v1.23.0
-description: Cluster Autoscaler Chart with built-in Addon Resizer
-name: cluster-autoscaler
-type: application
-version: 0.0.2

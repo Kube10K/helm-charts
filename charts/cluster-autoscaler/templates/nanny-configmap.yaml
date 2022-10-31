@@ -1,9 +1,0 @@
-{{- /* https://github.com/kubernetes/autoscaler/blob/master/addon-resizer/deploy/example.yaml */}}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ template "cluster-autoscaler.fullname" . }}-nanny-config
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration

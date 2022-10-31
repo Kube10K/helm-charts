@@ -1,19 +1,21 @@
-# -- 
-# ..
-# https://github.com/kubernetes/dns/blob/91ab9712e385a6dfb6c95e45492c693d6c81155c/cmd/node-cache/app/cache_app.go#L272-L296
+# -- The namespace that holds the original `kube-dns` Service object. This
+# hostname is looked up via the Kubernetes API directly (not a DNS lookup), and
+# therefore the `node-local-dns` pods need to be launched in the same namespace
+# as the `kube-dns` service. We call this out here by explicitly defining the
+# namespace for the resources, regardless of the `--namespace` param passed into
+# the helm chart.
+#
+# ref: https://github.com/kubernetes/dns/blob/91ab9712e385a6dfb6c95e45492c693d6c81155c/cmd/node-cache/app/cache_app.go#L272-L296
 #
 kubeDnsNamespace: kube-system
 
 image:
-  # -- (`string`) This is the default repository. However we cache this image
-  # in our repos with regsync (see regsync.yaml) and the bootstrap parent
-  # application overrides the image repository value.
+  # -- (`string`) This is the default repository.
   repository: registry.k8s.io/dns/k8s-dns-node-cache
   pullPolicy: IfNotPresent
 
-  # -- (`string`) The image version we will run. Make sure it has been
-  # replicated already by checking out `regsync.yaml`.
-  tag: 1.22.8
+  # -- (`string`) The image version we will run.
+  tag:
 
 # -- (`int`) The port number that will be used to expose health information
 # about the node-local-dns pods. This number must be unique to all
@@ -25,11 +27,19 @@ healthPort: 9252
 # pods on the host that are running with hostNetwork:true.
 metricsPort: 9253
 
-# -- 
+# -- (`string`) The IP address for the DNS service that will be mapped locally
+# on each host to the node-local-dns pod. If operating in IPVS mode, this is
+# also the value you need to pass into the `--cluster-dns-ip` kubelet
+# parameters on-startup.
 serviceIP: 169.254.20.11
 
+# -- (`string`) The default IP address for the `kube-dns` service in the
+# `kube-system` namespace. This is used by the `node-local-dns` pods to push
+# local cluster queries upstream.
 coreDnsIP: 172.0.20.10
 
+# -- (`bool`) Whether or not the cluster is operating in IPVS mode. We default
+# to true because that is how you should be running your clusters now.
 ipvsMode: true
 
 # -- (`map`) Configure the deployment strategy for the pods, to ensure we don't

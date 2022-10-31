@@ -1,12 +1,8 @@
 # cluster-autoscaler
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.23.0](https://img.shields.io/badge/AppVersion-v1.23.0-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v1.23.0](https://img.shields.io/badge/AppVersion-v1.23.0-informational?style=flat-square)
 
 Cluster Autoscaler Chart with built-in Addon Resizer
-
-## Source Code
-
-* <https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns/nodelocaldns>
 
 ## Values
 
@@ -21,6 +17,7 @@ Cluster Autoscaler Chart with built-in Addon Resizer
 | nodeAffinity | object | `{}` | (`map`) Configures the Pod nodeAffinity rules |
 | nodeSelector | object | `{"kubernetes.io/arch":"amd64"}` | (`map`) Map that controls which nodes this daemonset is applied to. |
 | podAnnotations | object | `{}` | (`map`) Annotations to add to the Pods themselves. |
+| podAntiAffinity | object | `{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchExpressions":[{"key":"app","operator":"In","values":["cluster-autoscaler"]}]},"topologyKey":"kubernetes.io/hostname"}]}` | (`map`) Configures the Pod antiAffinity rules. By default we do not allow the pods to run on the same hosts. |
 | podDisruptionBudget | object | `{"maxUnavailable":1}` | (`map`) Configuration for the PodDisruptionBudget |
 | podNanny.args[0] | string | `"--poll-period=300000"` |  |
 | podNanny.args[1] | string | `"--threshold=25"` |  |

@@ -42,19 +42,19 @@ podNanny:
     # We're not trying to save pennies here. We are trying
     # to make sure we respond to natural cluster growth.
     - --scale-down-delay=36h
-    
+
     # Scale up as quickly as within ~10m of a new node booting up, if necessary.
     - --scale-up-delay=10m
-    
+
     # At no point should we assume the cluster is less than 10
     # nodes... this keeps us scaled up enough for any starting
     # off cluster.
     - --minClusterSize=10
-    
+
     # https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/proposals/scalability_tests.md
     - --cpu=250m
     - --extra-cpu=4m
-    
+
     # Memory is more dependent on number of pods than it is
     # number of nodes, and since the pod/node density changes a
     # bit, we pick the worst case scenario.
@@ -96,6 +96,17 @@ podDisruptionBudget:
 
 # -- (`map`) Configures the Pod nodeAffinity rules
 nodeAffinity: {}
+
+# -- (`map`) Configures the Pod antiAffinity rules. By default we do not allow
+# the pods to run on the same hosts.
+podAntiAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - topologyKey: kubernetes.io/hostname
+      labelSelector:
+        matchExpressions:
+          - key: app
+            operator: In
+            values: [cluster-autoscaler]
 
 # -- (`map`) Map that controls which nodes this daemonset is applied to.
 nodeSelector:
@@ -153,27 +164,27 @@ args:
   - --v=4
   - --stderrthreshold=info
   - --skip-nodes-with-local-storage=false
-      
+
   # Type of node group expander to be used in scale up.
   #
   # https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-are-expanders
   - --expander=least-waste
-      
+
   # Cloud provider type.
   - --cloud-provider=aws
-      
+
   # How long after scale up that scale down evaluation resumes
   - --scale-down-delay-after-add=30m
-      
+
   # https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/#reducing-the-scan-interval
   # https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/proposals/scalability_tests.md#expected-performance
   #
   # 30s is the interval that the CA team uses to benchmark the app anyways
   - --scan-interval=30s
-      
+
   # Customizations
   - --skip-nodes-with-system-pods=false
-      
+
   # Detect similar node groups and balance the number of nodes between them
   #
   # (we want to let the spot group scale up more for example)

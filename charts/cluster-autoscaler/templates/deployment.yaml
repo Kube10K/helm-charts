@@ -26,15 +26,10 @@ spec:
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-        {{- /* Never allow the Cluster Autoscaler pods to run on the same hosts */}}
+        {{- with .Values.podAntiAffinity }}
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: kubernetes.io/hostname
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values: [ cluster-autoscaler ]
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}

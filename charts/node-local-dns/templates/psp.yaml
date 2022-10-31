@@ -1,0 +1,39 @@
+{{- /*
+
+Grant the node-local-cache ServiceAcount access to the hostports, and volume
+mounts necessary to intercept the DNS configuration for pods on the host:
+
+Warning  FailedCreate  72s (x16 over 3m56s)  daemonset-controller  Error
+creating: pods "node-local-dns-" is forbidden: PodSecurityPolicy: unable to
+admit pod: [spec.securityContext.hostNetwork: Invalid value: true: Host network
+is not allowed to be used spec.volumes[0].hostPath.pathPrefix: Invalid value:
+  "/run/xtables.lock": is not allowed to be used
+spec.containers[0].securityContext.privileged: Invalid value: true: Privileged
+containers are not allowed spec.containers[0].hostPort: Invalid value: 9253:
+  Host port 9253 is not allowed to be used. Allowed ports: []]
+*/}}
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}:podsecuritypolicy:eks.privileged
+rules:
+  - apiGroups: [policy]
+    resources: [podsecuritypolicies]
+    verbs:     [use]
+    resourceNames: [eks.privileged]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}:podsecuritypolicy:eks.privileged
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}:podsecuritypolicy:eks.privileged
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}
+    namespace: {{ .Release.Namespace }}

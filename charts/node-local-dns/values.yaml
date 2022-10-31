@@ -1,0 +1,89 @@
+# -- 
+# ..
+# https://github.com/kubernetes/dns/blob/91ab9712e385a6dfb6c95e45492c693d6c81155c/cmd/node-cache/app/cache_app.go#L272-L296
+#
+kubeDnsNamespace: kube-system
+
+image:
+  # -- (`string`) This is the default repository. However we cache this image
+  # in our repos with regsync (see regsync.yaml) and the bootstrap parent
+  # application overrides the image repository value.
+  repository: registry.k8s.io/dns/k8s-dns-node-cache
+  pullPolicy: IfNotPresent
+
+  # -- (`string`) The image version we will run. Make sure it has been
+  # replicated already by checking out `regsync.yaml`.
+  tag: 1.22.8
+
+# -- (`int`) The port number that will be used to expose health information
+# about the node-local-dns pods. This number must be unique to all
+# hostNetwork:true services on the host, which is why it is configurable here.
+healthPort: 9252
+
+# -- (`int`) The port number that is used to expose custom metrics to
+# prometheus for monitoring. This port must also be unique among all of the
+# pods on the host that are running with hostNetwork:true.
+metricsPort: 9253
+
+# -- 
+serviceIP: 169.254.20.11
+
+coreDnsIP: 172.0.20.10
+
+ipvsMode: true
+
+# -- (`map`) Configure the deployment strategy for the pods, to ensure we don't
+# roll out too many at once.
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 10%
+
+# -- (`string`) Ensure that these pods have the highest priority possible.
+priorityClassName: system-node-critical
+
+# -- (`map`) Annotations to add to the Pods themselves.
+podAnnotations: {}
+
+# -- (`map`)` SecurityContext to be set on the pod itself.
+podSecurityContext: {}
+
+serviceAccount:
+  # -- (`bool`) Whether or not to create the node-local-dns ServiceAccount.
+  create: true
+
+  # -- (`map`) Annotations to add to the ServiceAccount.
+  annotations: {}
+
+  # -- (`string`) Optional hard-coded override for the name of the ServiceAccount.
+  name: ""
+
+# -- (`map`) Map that controls which nodes this daemonset is applied to.
+nodeSelector: {}
+
+# -- (`map`) Configures which tolerations this pod will accept. By default we
+# accept ALL because this is a core critical system pod that should run
+# everywhere.
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+  - effect: NoSchedule
+    operator: Exists
+
+# -- (`map`) The default configuration that caches around ~10k items is
+# supposed to use ~30Mi of memory at max according to the documentation:
+#
+# https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/#setting-memory-limits
+#
+resources:
+  # limit: no limit here, we do not want to pre-emptively crash the pod due to an OOM issue for any reason.
+  #
+  # According to
+  # https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/#setting-memory-limits,
+  # we should explicitly NOT let this pod get OOM'd aggressively because while
+  # it is down, DNS lookups on the host will fail until it comes back. It only
+  # removes the iptables routes on shutdown when it is shut down gracefully.
+  requests:
+    cpu: 30m
+    memory: 50Mi

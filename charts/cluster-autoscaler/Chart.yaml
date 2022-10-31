@@ -1,0 +1,8 @@
+apiVersion: v2
+appVersion: v1.23.0
+description: Cluster Autoscaler Chart with built-in Addon Resizer
+name: cluster-autoscaler
+sources:
+- https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns/nodelocaldns
+type: application
+version: 0.0.1

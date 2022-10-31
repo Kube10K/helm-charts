@@ -1,0 +1,13 @@
+# See https://github.com/helm/chart-testing#configuration
+remote: origin
+chart-dirs:
+  - charts
+helm-extra-args: --timeout 600s
+target-branch: main
+chart-repos:
+  - strimzi=https://strimzi.io/charts/
+  - flink-operator=https://googlecloudplatform.github.io/flink-on-k8s-operator
+  - jetstack=https://charts.jetstack.io
+  - k8s-charts=https://k8s-charts.nextdoor.com
+excluded-charts:
+  - nd-common

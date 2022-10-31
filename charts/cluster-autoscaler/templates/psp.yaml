@@ -1,0 +1,35 @@
+{{- if .Values.podSecurityPolicy.create }}
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ template "cluster-autoscaler.fullname" . }}
+  labels:
+    {{- include "cluster-autoscaler.labels" . | nindent 4 }}
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default,runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+spec:
+  allowPrivilegeEscalation: false
+  allowedHostPaths:
+  - pathPrefix: {{ .Values.sslPath }}
+    readOnly: true
+  fsGroup:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  volumes:
+  - configMap
+  - emptyDir
+  - hostPath
+  - projected
+{{- end }}
